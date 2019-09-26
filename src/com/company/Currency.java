@@ -49,8 +49,8 @@ public class Currency {
     public void setNameFull(String nameFull) {
         this.nameFull = nameFull;
     }
+
     public boolean isCurrency(String currency) {
-        if (currency.equals(getCode())) return true;
-        return false;
+        return currency.equals(getCode());
     }
 }

@@ -3,16 +3,18 @@ package com.company;
 import com.google.gson.Gson;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Arrays;
 
 public class WorkClass {
 
     private Company[] company;
-    private boolean isSecondTry;
+    private boolean isReadJson;
+    private boolean isCorrectQuery;
 
     public void readJson() {
-        System.out.println("Введите путь к файлу");
+        System.out.println("Введите путь к файлу:");
         Gson g = new Gson();
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -20,9 +22,9 @@ public class WorkClass {
             company = g.fromJson(bufferedReader, Company[].class);
         }
         catch (FileNotFoundException e) {
-            if (!isSecondTry) System.out.println("Файл не найден, попробуйте снова");
+            if (!isReadJson) System.out.println("Файл не найден, попробуйте снова");
             else System.out.println("Файл не найден");
-            isSecondTry = true;
+            isReadJson = true;
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -30,17 +32,25 @@ public class WorkClass {
     }
 
     public void printCompanies() {
+        long companySec = 0;
+        long allSec = 0;
         for (Company com : company) {
             System.out.println(com.toString());
             com.getSecurities().stream().filter(s -> s.
                     isBefore(LocalDate.now(), LocalDate.parse(s.getDateTo()))).forEach(System.out::println);
-            System.out.println("Просроченных ценных бумаг: " + com.getSecurities().stream().filter(s -> s.
-                    isBefore(LocalDate.now(), LocalDate.parse(s.getDateTo()))).count());
+           companySec = com.getSecurities().stream().filter(s -> s.
+                    isBefore(LocalDate.now(), LocalDate.parse(s.getDateTo()))).count();
+            System.out.println("Просроченных ценных бумаг в компании " + com.getNameShort() + ": "
+                    + companySec);
+            allSec += companySec;
         }
+        System.out.println("Общее количество просроченных бумаг: " + allSec);
     }
 
     public void printQuery() {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in))) {
+        System.out.println("Введите дату или валюту:");
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
             String userQuery = bufferedReader.readLine();
             if (Arrays.stream(Currencies.values()).anyMatch(s -> s.toString().equals(userQuery))) {
                 for (Company com : company) {
@@ -49,18 +59,21 @@ public class WorkClass {
                 }
             } else {
                 String[] str = userQuery.split("[,./]");
-                String date = "";
-                for (int i = str.length - 1; i >= 0; i--) {
-                    date += str[i];
-                    if (i != 0) date += "-";
-                }
-                LocalDate userDate = LocalDate.parse(date);
+                StringBuilder date = new StringBuilder();
+                for (int i = str.length - 1; i >= 0; i--)
+                    date.append(str[i]);
+                SimpleDateFormat parser;
+                if (date.length() == 6) parser = new SimpleDateFormat("yyMMdd");
+                else parser = new SimpleDateFormat("yyyyMMdd");
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                LocalDate userDate = LocalDate.parse(formatter.format(parser.parse(date.toString())));
                 Arrays.stream(company).filter(s -> s.
                         isBefore(userDate, LocalDate.parse(s.getEgrulDate()))).forEach(System.out::println);
             }
         }
         catch (Exception e) {
             System.out.println("Некорректный запрос");
+            isCorrectQuery = true;
         }
     }
 
@@ -72,8 +85,12 @@ public class WorkClass {
         this.company = company;
     }
 
-    public boolean isSecondTry() {
-        return isSecondTry;
+    public boolean isReadJson() {
+        return isReadJson;
+    }
+
+    public boolean isCorrectQuery() {
+        return isCorrectQuery;
     }
 
     enum Currencies {
