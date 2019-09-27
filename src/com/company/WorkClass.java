@@ -10,21 +10,27 @@ import java.util.Arrays;
 public class WorkClass {
 
     private Company[] company;
-    private boolean isReadJson;
-    private boolean isCorrectQuery;
+    private boolean isReadFile;
+    private boolean isExit;
 
     public void readJson() {
         System.out.println("Введите путь к файлу:");
+        String filename = "";
         Gson g = new Gson();
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(reader.readLine()));
+            filename = reader.readLine();
+            if (filename.equals("exit")) {
+                isExit = true;
+                return;
+            }
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
             company = g.fromJson(bufferedReader, Company[].class);
+            isReadFile = true;
+            printCompanies();
         }
         catch (FileNotFoundException e) {
-            if (!isReadJson) System.out.println("Файл не найден, попробуйте снова");
-            else System.out.println("Файл не найден");
-            isReadJson = true;
+            System.out.println("Файл не найден, попробуйте снова");
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -52,7 +58,12 @@ public class WorkClass {
         try {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
             String userQuery = bufferedReader.readLine();
-            if (Arrays.stream(Currencies.values()).anyMatch(s -> s.toString().equals(userQuery))) {
+            if (userQuery.equals("exit")) {
+                isReadFile = false;
+                return;
+            }
+            if (Arrays.stream(company).anyMatch(s -> s.getSecurities().
+                    stream().anyMatch(x -> x.getCurrency().getCode().equals(userQuery)))) {
                 for (Company com : company) {
                     com.getSecurities().stream().
                             filter(s -> (s.getCurrency().isCurrency(userQuery))).forEach(System.out::println);
@@ -72,8 +83,7 @@ public class WorkClass {
             }
         }
         catch (Exception e) {
-            System.out.println("Некорректный запрос");
-            isCorrectQuery = true;
+            System.out.println("Некорректный запрос, попробуйте снова");
         }
     }
 
@@ -85,22 +95,12 @@ public class WorkClass {
         this.company = company;
     }
 
-    public boolean isReadJson() {
-        return isReadJson;
+    public boolean isReadFile() {
+        return isReadFile;
     }
 
-    public boolean isCorrectQuery() {
-        return isCorrectQuery;
-    }
-
-    enum Currencies {
-        JPY, CNY, SDG, RON, MKD, MXN, CAD, ZAR, AUD, NOK, ILS, ISK,
-        SYP, LYD, UYU, YER, CSD, EEK, THB, IDR, LBP, AED, BOB, QAR,
-        BHD, HNL, HRK, COP, ALL, DKK, MYR, SEK, RSD, BGN, DOP, KRW,
-        LVL, VEF, CZK, TND, KWD, VND, JOD, NZD, PAB, CLP, PEN, GBP,
-        DZD, CHF, RUB, UAH, ARS, SAR, EGP, INR, PYG, TWD, TRY, BAM,
-        OMR, SGD, MAD, BYR, NIO, HKD, LTL, SKK, GTQ, BRL, EUR, HUF,
-        IQD, CRC, PHP, SVC, PLN, USD
+    public boolean isExit() {
+        return isExit;
     }
 }
 
