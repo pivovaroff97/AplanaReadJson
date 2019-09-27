@@ -69,15 +69,15 @@ public class WorkClass {
                             filter(s -> (s.getCurrency().isCurrency(userQuery))).forEach(System.out::println);
                 }
             } else {
-                String[] str = userQuery.split("[,./]");
-                StringBuilder date = new StringBuilder();
-                for (int i = str.length - 1; i >= 0; i--)
-                    date.append(str[i]);
+                String date = userQuery.replaceAll("[,./]", "");
+                if (Integer.parseInt(date.substring(2,4)) > LocalDate.MAX.getMonthValue()) throw new Exception();
+                if (Integer.parseInt(date.substring(0,2)) == 0 || Integer.parseInt(date.substring(0,2)) >
+                        LocalDate.MAX.withMonth(Integer.parseInt(date.substring(2,4))).getDayOfMonth()) throw new Exception();
                 SimpleDateFormat parser;
-                if (date.length() == 6) parser = new SimpleDateFormat("yyMMdd");
+                if (date.length() == 6) parser = new SimpleDateFormat("ddMMyy");
                 else parser = new SimpleDateFormat("yyyyMMdd");
                 SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-                LocalDate userDate = LocalDate.parse(formatter.format(parser.parse(date.toString())));
+                LocalDate userDate = LocalDate.parse(formatter.format(parser.parse(date)));
                 Arrays.stream(company).filter(s -> s.
                         isBefore(userDate, LocalDate.parse(s.getEgrulDate()))).forEach(System.out::println);
             }
